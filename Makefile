@@ -1,30 +1,39 @@
-#!/usr/bin/make -f
-# -*- mode:makefile -*-
-
-FLAGS := -fopenmp -lm
-CC := gcc
-
 DIROBJ := obj/
+DIREXE := exec/
 DIRSRC := src/
 
-all: dirs discretizo_secuencial discretizo_paralelo
+CC := gcc-8
+CFLAGS := -c -Wall -Wextra -Wpedantic -O2 -fopenmp -lm
+LDLIBS := -L$(DIROBJ) -fopenmp -lm
 
-dirs:
-	mkdir -p $(DIROBJ)
-	
-	
-discretizo_secuencial: $(DIRSRC)discretizo_secuencial.c
-	$(CC) -o $@ $^ $(FLAGS)
 
-discretizo_paralelo: $(DIRSRC)discretizo_paralelo.c
-	$(CC) -o $@ $^ $(FLAGS)
+all: dirs sequential parallel parallel_reduction
+
+seq: sequential
+	$(DIREXE)sequential
+
+par: parallel
+	$(DIREXE)parallel
+
+red: parallel_reduction
+	$(DIREXE)parallel_reduction
+
+sequential: $(DIROBJ)sequential.o
+	$(CC) -o $(DIREXE)$@ $^ $(LDLIBS)
+
+parallel: $(DIROBJ)parallel.o
+	$(CC) -o $(DIREXE)$@ $^ $(LDLIBS)
+
+parallel_reduction: $(DIROBJ)parallel_reduction.o
+	$(CC) -o $(DIREXE)$@ $^ $(LDLIBS)
 
 $(DIROBJ)%.o: $(DIRSRC)%.c
-	$(CC) -c $^ -o $@ $(FLAGS)
-	
-	
-clean: 
-	-$(RM) *~
-	-$(RM) -r ./obj
-	-$(RM) discretizo_secuencial discretizo_paralelo
+	$(CC) $(CFLAGS) $^ -o $@
 
+dirs:
+	mkdir -p $(DIROBJ) $(DIRLIB) $(DIREXE)
+
+clean: 
+	$(RM) -rf *~ core $(DIROBJ) $(DIREXE) $(DIRHEA)*~
+	
+.PHONY: all, dirs, seq, par, red, sequential, parallel, parallel_reduction, clean

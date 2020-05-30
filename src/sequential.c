@@ -5,7 +5,6 @@
 
 */
 
-#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -65,40 +64,57 @@ int main (int argc, char* argv[]){
     else{
         n = atoi(argv[1]);
     }
+    printf("Vector de %d elementos\n", n);
     
-    // Set number of threads to be the same as the mapping
-    omp_set_num_threads(4);
-
     gettimeofday(&t0, NULL);
 
     /*
     *  INITIALIZATION
     */
     srand(time(NULL));
-    int V[n];
+    printf("Hola\n");
+    int* V = 0;
+    V = malloc(n * sizeof(int));
+
+    if (!V)
+    {
+        printf("Error reservando memoria para el vector\n");
+        return 1;
+    }
+      
     int i;
     for(i = 0; i < n; i++){
         V[i] = random_int(0, 95);
     }
-    int bounds[5] = {0, 15, 25, 65, 96};
 
     /*
     *  DISCRETIZATION
     */
 
-    #pragma omp parallel for shared(V, n, result) private(i)
-    for (i = 0; i < 4; i++){
-        int j;
-        for (j = 0; j < n; j++){
-            if (V[j] >= bounds[i] && V[j] < bounds[i+1]){
-                result[i]++;
-            }
+  
+
+    for (i = 0; i < n; i++){
+        if (V[i] < L1){
+            result[0]++;
         }
+        else if (V[i] < L2)
+        {
+            result[1]++;
+        }
+        else if (V[i] < L3)
+        {
+            result[2]++;
+        }
+        else{
+            result[3]++;
+        }
+        
         
     }
 
     gettimeofday(&t1, NULL);
     time_track("Tiempo secuencial", &t0, &t1);
+
     show_vector(result, 4);
     return 0;
 }

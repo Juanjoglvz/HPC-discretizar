@@ -5,6 +5,7 @@
 
 */
 
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -15,12 +16,6 @@
 #define L1 15
 #define L2 25
 #define L3 65
-
-// VARIABLES
-struct timeval t0, t1;
-int n;
-int result[4];
-
 
 /*
 * Procedure that displays the time (in milliseconds): pt1-pt0 together with the parameterized string: pText
@@ -55,17 +50,22 @@ void show_vector(int *V, int len) {
 * MAIN PROGRAM
 */
 
-int main (int argc, char* argv[]){
+int main (int argc, char* argv[]){    
+    long n;
     // Check for correct argument and save it
     if (argc != 2){
         fprintf(stderr, "Uso correcto: discretizo n\n Siendo n el tamaño del vector.\n\n");
         return 1;
     }
     else{
-        n = atoi(argv[1]);
+        n = atol(argv[1]);
     }
-    printf("Vector de %d elementos\n", n);
     
+    // Set number of threads to be the same as the mapping
+    omp_set_num_threads(4);
+
+    
+    struct timeval t0, t1;
     gettimeofday(&t0, NULL);
 
     /*
@@ -80,40 +80,30 @@ int main (int argc, char* argv[]){
         printf("Error reservando memoria para el vector\n");
         return 1;
     }
-      
     int i;
     for(i = 0; i < n; i++){
         V[i] = random_int(0, 95);
     }
+    int bounds[5] = {0, 15, 25, 65, 96};
 
     /*
     *  DISCRETIZATION
     */
 
-  
-
-    for (i = 0; i < n; i++){
-        if (V[i] < L1){
-            result[0]++;
+    int result[4];
+    #pragma omp parallel for shared(V, n) private(i) reduction(+:result[:4])
+    for (i = 0; i < 4; i++){
+        int j;
+        for (j = 0; j < n; j++){
+            if (V[j] >= bounds[i] && V[j] < bounds[i+1]){
+                result[i]++;
+            }
         }
-        else if (V[i] < L2)
-        {
-            result[1]++;
-        }
-        else if (V[i] < L3)
-        {
-            result[2]++;
-        }
-        else{
-            result[3]++;
-        }
-        
         
     }
 
     gettimeofday(&t1, NULL);
     time_track("Tiempo secuencial", &t0, &t1);
-
     show_vector(result, 4);
     return 0;
 }
