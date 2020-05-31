@@ -5,6 +5,7 @@
 
 */
 
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -15,8 +16,6 @@
 #define L1 15
 #define L2 25
 #define L3 65
-
-
 
 /*
 * Procedure that displays the time (in milliseconds): pt1-pt0 together with the parameterized string: pText
@@ -51,7 +50,7 @@ void show_vector(long *V, long len) {
 * MAIN PROGRAM
 */
 
-int main (int argc, char* argv[]){
+int main (int argc, char* argv[]){    
     long n;
     // Check for correct argument and save it
     if (argc != 2){
@@ -59,11 +58,13 @@ int main (int argc, char* argv[]){
         return 1;
     }
     else{
-        n = atoi(argv[1]);
+        n = atol(argv[1]);
     }
-    printf("Vector de %ld elementos\n", n);
     
+    // Set number of threads to be the same as the mapping
+    omp_set_num_threads(8);
 
+    
     struct timeval t0, t1;
     gettimeofday(&t0, NULL);
 
@@ -79,8 +80,7 @@ int main (int argc, char* argv[]){
         printf("Error reservando memoria para el vector\n");
         return 1;
     }
-      
-    int i;
+    long i;
     for(i = 0; i < n; i++){
         V[i] = random_int(0, 95);
     }
@@ -88,9 +88,33 @@ int main (int argc, char* argv[]){
     /*
     *  DISCRETIZATION
     */
+    int bounds[5] = {0, 15, 25, 65, 96};
 
-  
     long *result = 0;
+    result = calloc(4, sizeof(long));
+    #pragma omp parallel for shared(V, n) private(i) 
+    for (i = 0; i < 4; i++){
+        int j;
+
+        #pragma omp parallel for shared(V, n) private(j) reduction(+:result[:4])
+        for (j = 0; j < n; j++){
+            if (V[j] >= bounds[i] && V[j] < bounds[i+1]){
+                result[i]++;
+            }
+        }
+        
+    }
+
+
+    gettimeofday(&t1, NULL);
+    time_track("Tiempo secuencial", &t0, &t1);
+    show_vector(result, 4);
+
+
+    /*
+    *  SEQUENTIAL ALGORITHM
+    *  Checking for correctness
+    */
     result = calloc(4, sizeof(long));
     for (i = 0; i < n; i++){
         if (V[i] < L1){
@@ -111,9 +135,7 @@ int main (int argc, char* argv[]){
         
     }
 
-    gettimeofday(&t1, NULL);
-    time_track("Tiempo secuencial", &t0, &t1);
-
     show_vector(result, 4);
+
     return 0;
 }
