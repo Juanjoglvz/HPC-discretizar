@@ -35,13 +35,13 @@ int random_int(int lower, int upper){
 }
 
 /*
- * Procedure to show vectors
+ * procedure to show vectors
  */ 
-void show_vector(int *V, long len) {
+void show_vector(long *V, long len) {
     int i;
     for (i=0; i<len; i++) {
         if(i%5==0) printf("\n");
-        printf("%d ",V[i]);
+        printf("%ld ",V[i]);
     }
     printf("\n");
 }
@@ -90,25 +90,30 @@ int main (int argc, char* argv[]){
     */
 
   
-    int *result = 0;
-    result = calloc(n, sizeof(int));
+    long *result = 0;
+    result = calloc(4, sizeof(long));
     for (i = 0; i < n; i++){
-        if (V[i] >= L1 && V[i] < L2){
-            result[i] = 1;
+        if (V[i] < L1){
+            result[0]++;
         }
-        else if (V[i] >= L2 && V[i] < L3){
-            result[i] = 2;
+        else if (V[i] < L2)
+        {
+            result[1]++;
         }
-        else if (V[i] >= L3){
-            result[i] = 3;
+        else if (V[i] < L3)
+        {
+            result[2]++;
         }
+        else{
+            result[3]++;
+        }
+        
         
     }
 
     gettimeofday(&t1, NULL);
     time_track("Tiempo secuencial", &t0, &t1);
 
-    show_vector(V, 10);
-    show_vector(result, 10);
+    show_vector(result, 4);
     return 0;
 }

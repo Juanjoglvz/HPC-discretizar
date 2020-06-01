@@ -5,6 +5,7 @@
 
 */
 
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -46,6 +47,22 @@ void show_vector(int *V, long len) {
     printf("\n");
 }
 
+/*
+ * Procedure to compare 2 vectors
+ */ 
+
+void compare_vectors(int *V, int *W, long len){
+    int i;
+    int res = 1;
+
+    for (i = 0; i < len; i++){
+        if (V[i] != W[i]){
+            res = 0;
+        }
+    }
+
+    printf("Los vectores son %s\n", res == 1 ? "iguales" : "diferentes");
+}
 
 /*
 * MAIN PROGRAM
@@ -92,6 +109,8 @@ int main (int argc, char* argv[]){
   
     int *result = 0;
     result = calloc(n, sizeof(int));
+
+    #pragma omp parallel for shared(n, V, result) private(i) schedule(guided)
     for (i = 0; i < n; i++){
         if (V[i] >= L1 && V[i] < L2){
             result[i] = 1;
@@ -106,9 +125,33 @@ int main (int argc, char* argv[]){
     }
 
     gettimeofday(&t1, NULL);
-    time_track("Tiempo secuencial", &t0, &t1);
+    time_track("Tiempo paralelo", &t0, &t1);
 
     show_vector(V, 10);
     show_vector(result, 10);
+
+
+    /*
+    *  SEQUENTIAL ALGORITHM
+    *  Checking for correctness
+    */
+
+    int *result2 = 0;
+    result2 = calloc(n, sizeof(int));
+    for (i = 0; i < n; i++){
+        if (V[i] >= L1 && V[i] < L2){
+            result2[i] = 1;
+        }
+        else if (V[i] >= L2 && V[i] < L3){
+            result2[i] = 2;
+        }
+        else if (V[i] >= L3){
+            result2[i] = 3;
+        }
+        
+    }
+
+    compare_vectors(result, result2, n);
+
     return 0;
 }
