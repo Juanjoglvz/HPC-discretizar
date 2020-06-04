@@ -65,8 +65,6 @@ int main (int argc, char* argv[]){
     omp_set_num_threads(4);
 
     
-    struct timeval t0, t1;
-    gettimeofday(&t0, NULL);
 
     /*
     *  INITIALIZATION
@@ -80,27 +78,45 @@ int main (int argc, char* argv[]){
         printf("Error reservando memoria para el vector\n");
         return 1;
     }
-    int i;
+    long i;
     for(i = 0; i < n; i++){
         V[i] = random_int(0, 95);
     }
-    int bounds[5] = {0, 15, 25, 65, 96};
 
     /*
     *  DISCRETIZATION
     */
 
+
+    struct timeval t0, t1;
+    gettimeofday(&t0, NULL);
+
     long *result = 0;
     result = calloc(4, sizeof(long));
-    #pragma omp parallel for shared(V, n, result) private(i)
-    for (i = 0; i < 4; i++){
-        int j;
-        for (j = 0; j < n; j++){
-            if (V[j] >= bounds[i] && V[j] < bounds[i+1]){
-                result[i]++;
-            }
+    long *p_results = 0;
+    p_results = calloc(16, sizeof(long));
+    #pragma omp parallel for shared(V, n, result, p_results) private(i) schedule(static, n/4)
+    for(i = 0; i < n; i++){
+        if (V[i] < L1){
+            p_results[(omp_get_thread_num() * 4) + 0]++;
         }
-        
+        else if (V[i] < L2)
+        {
+            p_results[(omp_get_thread_num() * 4) + 1]++;
+        }
+        else if (V[i] < L3)
+        {
+            p_results[(omp_get_thread_num() * 4) + 2]++;
+        }
+        else{
+            p_results[(omp_get_thread_num() * 4) + 3]++;
+        }
+    }
+
+
+    // Sum partial results
+    for(i = 0; i < 4; i++){
+        result[i] = p_results[i] + p_results[i + 4] + p_results[i + 8] + p_results[i + 12];
     }
 
     gettimeofday(&t1, NULL);
@@ -133,5 +149,6 @@ int main (int argc, char* argv[]){
     }
 
     show_vector(result, 4);
+
     return 0;
 }

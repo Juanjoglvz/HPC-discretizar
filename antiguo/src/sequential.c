@@ -64,8 +64,6 @@ int main (int argc, char* argv[]){
     printf("Vector de %ld elementos\n", n);
     
 
-    struct timeval t0, t1;
-    gettimeofday(&t0, NULL);
 
     /*
     *  INITIALIZATION
@@ -88,6 +86,10 @@ int main (int argc, char* argv[]){
     /*
     *  DISCRETIZATION
     */
+
+
+    struct timeval t0, t1;
+    gettimeofday(&t0, NULL);
 
   
     long *result = 0;

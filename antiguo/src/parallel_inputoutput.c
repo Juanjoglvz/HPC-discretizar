@@ -65,8 +65,6 @@ int main (int argc, char* argv[]){
     omp_set_num_threads(8);
 
     
-    struct timeval t0, t1;
-    gettimeofday(&t0, NULL);
 
     /*
     *  INITIALIZATION
@@ -88,6 +86,10 @@ int main (int argc, char* argv[]){
     /*
     *  DISCRETIZATION
     */
+
+
+    struct timeval t0, t1;
+    gettimeofday(&t0, NULL);
     int bounds[5] = {0, 15, 25, 65, 96};
 
     long *result = 0;

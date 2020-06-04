@@ -65,8 +65,6 @@ int main (int argc, char* argv[]){
     omp_set_num_threads(4);
 
     
-    struct timeval t0, t1;
-    gettimeofday(&t0, NULL);
 
     /*
     *  INITIALIZATION
@@ -90,9 +88,13 @@ int main (int argc, char* argv[]){
     *  DISCRETIZATION
     */
 
+
+    struct timeval t0, t1;
+    gettimeofday(&t0, NULL);
+
     long *result = 0;
     result = calloc(4, sizeof(long));
-    #pragma omp parallel for shared(V, n) private(i) reduction(+:result[:4])
+    #pragma omp parallel for shared(V, n, result) private(i)
     for (i = 0; i < 4; i++){
         int j;
         for (j = 0; j < n; j++){

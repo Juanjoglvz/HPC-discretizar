@@ -65,8 +65,6 @@ int main (int argc, char* argv[]){
     omp_set_num_threads(4);
 
     
-    struct timeval t0, t1;
-    gettimeofday(&t0, NULL);
 
     /*
     *  INITIALIZATION
@@ -80,28 +78,32 @@ int main (int argc, char* argv[]){
         printf("Error reservando memoria para el vector\n");
         return 1;
     }
-    long i;
+    int i;
     for(i = 0; i < n; i++){
         V[i] = random_int(0, 95);
     }
+    int bounds[5] = {0, 15, 25, 65, 96};
 
     /*
     *  DISCRETIZATION
     */
-    int bounds[5] = {0, 15, 25, 65, 96};
+
+
+    struct timeval t0, t1;
+    gettimeofday(&t0, NULL);
 
     long *result = 0;
     result = calloc(4, sizeof(long));
-    #pragma omp parallel for shared(V, n) private(i) schedule(static, n/4) reduction(+:result[:4])
-    for(i = 0; i < n; i++){
+    #pragma omp parallel for shared(V, n) private(i) reduction(+:result[:4])
+    for (i = 0; i < 4; i++){
         int j;
-        for (j = 0; j < 4; j++){
-            if (V[i] >= bounds[j] && V[i] < bounds[j+1]){
-                    result[j]++;
-                }
+        for (j = 0; j < n; j++){
+            if (V[j] >= bounds[i] && V[j] < bounds[i+1]){
+                result[i]++;
+            }
         }
+        
     }
-
 
     gettimeofday(&t1, NULL);
     time_track("Tiempo secuencial", &t0, &t1);
@@ -133,6 +135,5 @@ int main (int argc, char* argv[]){
     }
 
     show_vector(result, 4);
-
     return 0;
 }
